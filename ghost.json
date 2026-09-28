@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 3,
+  "minCindyVersion": "0.1.91",
+  "id": "localization-polish",
+  "name": "本地化润色",
+  "description": "面向任意语言组合的本地化校对与润色，兼顾语义、语气、术语、地区变体和格式安全。",
+  "whenToUse": "需要润色或审校游戏、应用、产品及 UI 的现有译文，检查自然度、准确性、术语一致性、地区变体或占位符安全时使用；支持任意源语言和目标语言，不限中英。",
+  "version": "1.0.0",
+  "kind": "chip",
+  "entry": "main.js",
+  "command": "本地化润色",
+  "tools": [
+    {
+      "name": "check_protected_tokens",
+      "description": "确定性检查指定不可改动片段在原文和润色后文本中的逐字出现次数。只比较调用者明确提供的字面片段，不解析模板语法、标签嵌套、参数顺序，也不判断翻译准确性。",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "type": "string",
+            "maxLength": 100000,
+            "description": "原文，保持原样。"
+          },
+          "translation": {
+            "type": "string",
+            "maxLength": 100000,
+            "description": "润色后的目标文本，保持原样。"
+          },
+          "tokens": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "description": "需要逐字保留的变量、资源键、URL 等完整片段；不要加入应被翻译或本地化的内容。"
+          }
+        },
+        "required": ["source", "translation", "tokens"]
+      }
+    }
+  ],
+  "manual": {
+    "items": [
+      {
+        "dir": "manual/localization-polish",
+        "name": "localization-polish",
+        "description": "多语种本地化润色方法与格式保护规则。"
+      }
+    ]
+  }
+}
