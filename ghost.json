@@ -5,7 +5,7 @@
   "name": "本地化润色",
   "description": "多语种本地化润色由 Cindy 当前模型直接完成；占位符核验工具仅为可选辅助。",
   "whenToUse": "需要润色或审校游戏、应用、产品及 UI 的现有译文，让文本像目标语言母语者写的一样自然时使用；描述性文案可重组、意译，不必逐句照搬原文；支持任意语言组合和地区变体。润色由当前 Cindy Agent 直接完成，固定片段核验工具仅可选调用。",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "kind": "chip",
   "entry": "main.js",
   "command": "本地化润色",
@@ -40,7 +40,11 @@
             "description": "需要逐字保留的变量、资源键、URL 等完整片段；不要加入应被翻译或本地化的内容。"
           }
         },
-        "required": ["source", "translation", "tokens"]
+        "required": [
+          "source",
+          "translation",
+          "tokens"
+        ]
       }
     }
   ],

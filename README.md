@@ -12,7 +12,23 @@ Cindy 插件，用于润色和审校游戏、应用、产品及 UI 的现有译�
 
 ## 安装
 
-在 GitHub 仓库的 `dist/` 中下载最新 `.cindy` 包，然后在 Cindy 的插件页面导入安装。也可以从源码目录使用 Cindy 的插件打包流程生成安装包。
+下载 [localization-polish-1.0.3.cindy](dist/localization-polish-1.0.3.cindy)，然后在 Cindy 的插件页面导入安装。也可以从源码目录使用 Cindy 的插件打包流程生成安装包。
+
+## 使用示例
+
+> 用美式英语润色下列游戏对白，保留角色克制的语气、ID 和占位符，只返回修改后的译文。
+
+> 对照中文审校这份多语言表格，按 ID 配对；保留原文和现译列，新增建议与原因。准确自然的条目保持不变。
+
+尽量提供原文、现译及已有术语；有角色背景、地区或长度限制时一并提供。只有译文也可润色，但不能据此验证原文含义或漏译。
+
+## 规则与更新
+
+- [完整润色手册](manual/localization-polish/MANUAL.md)
+- [正反示例](manual/localization-polish/examples.md)
+- [版本记录](CHANGELOG.md)
+
+`check_protected_tokens` 仅核验指定片段的逐字出现次数。即使返回 `same_count`，也不代表参数顺序、标签嵌套或翻译含义正确。
 
 ## 隐私与边界
 
