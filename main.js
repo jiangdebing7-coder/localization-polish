@@ -78,26 +78,15 @@ function prepareReview(args) {
       if (row.changes.length) reviewError(label + '译文未变化，不能填写虚构的修改点。');
       reason = '无需修改';
     } else {
-      if (!row.changes.length) reviewError(label + '译文已改变，必须提供逐项改前、改后措辞及原因。');
-      let reconstructed = translation;
-      const explanations = row.changes.map((change, n) => {
-        if (!change || typeof change !== 'object') reviewError(label + '修改点无效。');
-        const before = reviewText(change.before, label + '修改前措辞');
-        const after = reviewText(change.after, label + '修改后措辞', true);
-        const why = reviewText(change.reason, label + '修改原因');
+      if (!row.changes.length) reviewError(label + '译文已改变，必须简要说明修改了哪些内容及理由。');
+      const explanations = row.changes.map(change => {
+        const why = reviewText(change, label + '修改原因');
         const generic = why.replace(/[\s，。；：、,.!！?？:;]/g, '');
         if (['更自然','已优化','优化表达','调整语序','统一风格','修改译文','润色','无需修改','同上'].includes(generic))
-          reviewError(label + '原因过于笼统，请解释本项具体变化。');
-        if (before === after) reviewError(label + '修改前后措辞相同。');
-        const at = reconstructed.indexOf(before);
-        if (at < 0) reviewError(label + '修改前措辞不在当前译文中，原因与实际改动不符。');
-        if (reconstructed.indexOf(before, at + 1) >= 0)
-          reviewError(label + '修改前措辞出现多次，请引用更完整的上下文或整句。');
-        reconstructed = reconstructed.slice(0, at) + after + reconstructed.slice(at + before.length);
-        return (n + 1) + '. “' + before + '” → “' + after + '”：' + why;
+          reviewError(label + '原因过于笼统，请简要说明本行具体改动。');
+        return why;
       });
-      if (reconstructed !== optimized) reviewError(label + '修改点未覆盖全部变化，或优化后译文与所列修改不一致。');
-      reason = explanations.join('\n');
+      reason = explanations.join('；');
       changed++;
     }
     if (row.note !== undefined) reason += '\n待确认：' + reviewText(row.note, label + '待确认事项');
@@ -188,7 +177,7 @@ async function exportReview(msg) {
     if (result.bytes !== undefined && result.bytes !== workbook.bytes) throw new Error('写入字节数不一致，请勿交付此文件。');
     await cindy.send({type:'tool-result',callId:msg.callId,ok:true,result:{
       path, rows:review.data.length, changed:review.changed, unchanged:review.data.length-review.changed,
-      columns:review.headers, scope:'已校验四列、逐条原因及修改点完整覆盖；已修改的 C 列单元格以黄色标记。未判断翻译质量，未读取原始文件核对基线。',
+      columns:review.headers, scope:'已校验四列及逐条原因非空；原因是否完整准确需对照译文人工核对；已修改的 C 列单元格以黄色标记。未判断翻译质量，未读取原始文件核对基线。',
       next_step:'使用文件读取工具回读此工作目录文件，按原始输入核对行数、原文、原译及原因，再提供下载链接。不得另行生成两列或三列文件替换此成果。'
     }});
   } catch (error) {

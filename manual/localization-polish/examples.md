@@ -63,7 +63,7 @@
 | 法语原文 | 原中文译文 | 润色后中文 | 修改原因 |
 | --- | --- | --- | --- |
 | Barbare | 野蛮人 | 野蛮人 | 无需修改 |
-| Veuillez réessayer plus tard. | 请更晚再试。 | 请稍后重试。 | “更晚” → “稍后”：此处 plus tard 表示过一段时间后，使用中文提示语的自然时间表达；“再试” → “重试”：采用常见操作提示用语。 |
-| Enregistrez les modifications avant de quitter. | 退出后保存更改。 | 退出前保存更改。 | “退出后” → “退出前”：avant de quitter 表示退出之前，修正操作顺序的误译。 |
+| Veuillez réessayer plus tard. | 请更晚再试。 | 请稍后重试。 | 调整时间表达和操作用语，符合中文系统提示习惯。 |
+| Enregistrez les modifications avant de quitter. | 退出后保存更改。 | 退出前保存更改。 | 修正操作先后顺序，避免误导用户。 |
 
 不合格的第四列：空白、“已优化”、“整体调整了语气和表达”、“同上”，或者为所有改动行复制同一个泛泛理由。未修改行可以重复填写“无需修改”，因为这明确标明该行没有改动。

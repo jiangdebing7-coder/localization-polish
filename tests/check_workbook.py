@@ -12,7 +12,7 @@ assert list(sheet.values) == [
     ('原文', '译文', '优化后译文', '修改原因'),
     ('Barbare', '野蛮人', '野蛮人', '无需修改'),
     ('Enregistrez les modifications avant de quitter.', '退出后保存更改。', '退出前保存更改。',
-     '1. “退出后” → “退出前”：avant de quitter 表示退出之前，修正操作顺序误译。'),
+     '修正操作先后顺序，避免误导用户。'),
 ]
 assert sheet['C3'].fill.fgColor.rgb == 'FFFFF2CC'
 assert sheet['C2'].fill.patternType is None

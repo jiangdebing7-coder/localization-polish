@@ -21,10 +21,14 @@ function harness(writeResult) {
   }};
 }
 const unchanged={source:'Barbare',translation:'野蛮人',optimized_translation:'野蛮人',changes:[]};
-const changed={source:'Enregistrez les modifications avant de quitter.',translation:'退出后保存更改。',optimized_translation:'退出前保存更改。',changes:[{before:'退出后',after:'退出前',reason:'avant de quitter 表示退出之前，修正操作顺序误译。'}]};
+const changed={source:'Enregistrez les modifications avant de quitter.',translation:'退出后保存更改。',optimized_translation:'退出前保存更改。',changes:['修正操作先后顺序，避免误导用户。']};
 test('exports original, existing translation, polished translation and specific reasons',async()=>{
  const h=harness(); const result=await h.run({expected_rows:2,rows:[unchanged,changed]});
  assert.equal(result.ok,true);assert.equal(result.result.changed,1);assert.equal(result.result.unchanged,1);
+ const review=vm.runInContext('prepareReview',h.context)({expected_rows:2,rows:[unchanged,changed]});
+ assert.equal(review.data[1][3],'修正操作先后顺序，避免误导用户。');
+ assert.ok(!review.data[1][3].includes(changed.translation));
+ assert.ok(!review.data[1][3].includes(changed.optimized_translation));
  assert.deepEqual(Array.from(result.result.columns),['原文','译文','优化后译文','修改原因']);
  assert.equal(h.writes[0].callId,'test-call');assert.equal(h.writes[0].root,'workdir');
  fs.writeFileSync(path.join(outputDir,'review-example.xlsx'),Buffer.from(h.writes[0].content,'base64'));
@@ -35,12 +39,10 @@ for(const [label,row] of [
  ['missing source',{...changed,source:undefined}],
  ['missing changes',{...changed,changes:undefined}],
  ['changed without reasons',{...changed,changes:[]}],
- ['blank reason',{...changed,changes:[{...changed.changes[0],reason:'  '}]}],
- ['generic reason',{...changed,changes:[{...changed.changes[0],reason:'更自然'}]}],
- ['wrong quote',{...changed,changes:[{...changed.changes[0],before:'退出之后'}]}],
- ['unexplained extra change',{...changed,optimized_translation:'退出前请保存更改。'}],
+ ['blank reason',{...changed,changes:['  ']}],
+ ['generic reason',{...changed,changes:['更自然']}],
+ ['legacy before/after payload',{...changed,changes:[{before:'退出后',after:'退出前',reason:'修正顺序。'}]}],
  ['invented change on unchanged row',{...unchanged,changes:changed.changes}],
- ['ambiguous quote',{...changed,translation:'后后',optimized_translation:'前后',changes:[{before:'后',after:'前',reason:'改成退出前操作。'}]}],
  ['oversize cell',{...unchanged,source:'x'.repeat(32768)}]
 ])test('rejects '+label+' without writing a file',async()=>{
  const h=harness();const r=await h.run({expected_rows:1,rows:[row]});assert.equal(r.ok,false);assert.equal(r.errorCode,'INVALID_REVIEW');assert.equal(h.writes.length,0);
@@ -49,13 +51,13 @@ test('rejects row count mismatch',async()=>{const h=harness();assert.equal((awai
 test('preserves duplicate rows, IDs, whitespace, Unicode, multiline and formula-like text',async()=>{
  const texts=[' =1+1\n<&> " 😀 ','_x0041_\r\nline\t2','00123'];
  const rows=texts.map((s,i)=>({source:s,translation:s,optimized_translation:s,changes:[],id:String(i)}));
- rows.push({...rows[0]});rows.push({source:null,translation:'abc',optimized_translation:'ab',changes:[{before:'abc',after:'ab',reason:'删除末尾误加的 c 字符；原文未提供，需人工确认。'}]});
+ rows.push({...rows[0]});rows.push({source:null,translation:'abc',optimized_translation:'ab',changes:['删除末尾误加字符；原文未提供，需人工确认。']});
  const h=harness();const r=await h.run({expected_rows:rows.length,rows});assert.equal(r.ok,true);
  fs.writeFileSync(path.join(outputDir,'edge-cases.xlsx'),Buffer.from(h.writes[0].content,'base64'));
  fs.writeFileSync(path.join(outputDir,'edge-cases.json'),JSON.stringify(rows));
 });
-test('handles sequential changes and validates complete coverage',async()=>{
- const h=harness(); const r=await h.run({expected_rows:1,rows:[{source:'a',translation:'one two',optimized_translation:'1 2',changes:[{before:'one',after:'1',reason:'按数字格式显示第一项。'},{before:'two',after:'2',reason:'按数字格式显示第二项。'}]}]});assert.equal(r.ok,true);
+test('joins concise reasons without duplicating before and after text',async()=>{
+ const h=harness(); const r=await h.run({expected_rows:1,rows:[{source:'a',translation:'one two',optimized_translation:'1 2',changes:['统一使用阿拉伯数字。','保留两项之间的空格。']}]});assert.equal(r.ok,true);
 });
 test('does not report a file when host write fails',async()=>{const h=harness({ok:false,message:'test disk failure'});const r=await h.run({expected_rows:1,rows:[unchanged]});assert.equal(r.ok,false);assert.equal(r.errorCode,'EXPORT_FAILED');assert.equal(r.result,undefined);});
 test('does not report success when byte count differs',async()=>{const h=harness({ok:true,bytes:0});const r=await h.run({expected_rows:1,rows:[unchanged]});assert.equal(r.ok,false);});
