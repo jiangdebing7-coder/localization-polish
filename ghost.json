@@ -3,13 +3,100 @@
   "minCindyVersion": "0.1.91",
   "id": "localization-polish",
   "name": "本地化润色",
-  "description": "多语种译文润色与四列人工验收。原译和优化结果完整保留，修改原因仅简述改动内容及理由，不重复前后译文；未改填“无需修改”，已改标黄。",
+  "description": "按每批文案的用途和语气制定专属润色提示，再由当前模型处理；保留四列验收表、简短修改原因和修改标黄。",
   "whenToUse": "润色或审校游戏、应用、产品及 UI 的现有译文，消除翻译腔、核对原意、术语和格式；支持任意语言组合、地区变体，以及需要原文、译文、优化后译文、逐条修改原因的人工验收表和 Excel/CSV 交付场景。",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "kind": "chip",
   "entry": "main.js",
   "command": "本地化润色",
   "tools": [
+    {
+      "name": "prepare_polish_task",
+      "description": "根据当前 Agent 对本批内容的语义分析，组装本次专属润色提示并返回 task_prompt。调用前先理解用户文本，简要归纳用途、语气与限制；不要按关键词机械分类，不要重复传整份原文或译文。工具不自行调用模型或生成译文，不联网、不写文件、不保存任务状态。返回提示供当前模型执行，完整流程见 localization-polish 手册。",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "target_language": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "目标语言及已知地区；地区未指定时如实说明，不猜测。"
+          },
+          "context": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 600,
+            "description": "本批用途、受众、产品或角色背景的简短归纳；仅用已知信息。"
+          },
+          "has_source": {
+            "type": "boolean",
+            "description": "是否有可对照原文；混合批次按原文可用情况分组处理。"
+          },
+          "segments": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "scope": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "适用段落、条目或 ID 范围；同用途归组，不粘贴全部文本。"
+                },
+                "purpose": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 400,
+                  "description": "本组文案希望玩家感受到或执行的事情，根据真实输入判断。"
+                },
+                "direction": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000,
+                  "description": "结合本组意图自由制定目标语风格、句式及改写边界；描述与规则可采取不同策略。"
+                }
+              },
+              "required": [
+                "scope",
+                "purpose",
+                "direction"
+              ]
+            },
+            "description": "按真实用途分组，自由制定各组策略；短句只需一组，不逐行生成提示。"
+          },
+          "requirements": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 400,
+              "description": "已确认的术语、限制或用户要求；保留影响本批决策的条目。"
+            }
+          },
+          "unknowns": {
+            "type": "array",
+            "maxItems": 12,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 400,
+              "description": "尚未确定且影响改写的事项，不把推测写成事实。"
+            }
+          }
+        },
+        "required": [
+          "target_language",
+          "context",
+          "has_source",
+          "segments"
+        ]
+      }
+    },
     {
       "name": "export_review_xlsx",
       "description": "润色完成后生成四列验收 Excel。先读取 localization-polish 手册，保留每行原文、原译和完整优化结果；changes 仅传简短的改动说明，不传 before/after、不重复前后译文。未改自动写“无需修改”，已改的 C 列标黄，缺字段或原因时拒绝导出。本工具在当前会话工作目录新建唯一命名的 .xlsx，不覆盖输入文件、不联网、不执行命令。成功后回读实际文件并核对每行说明是否准确，再交付。",
@@ -132,7 +219,7 @@
       {
         "dir": "manual/localization-polish",
         "name": "localization-polish",
-        "description": "多语种本地化润色方法、格式保护规则与默认四列人工验收输出规范。"
+        "description": "按批次定制润色策略、分场景改写，以及四列人工验收交付流程。"
       }
     ]
   }
