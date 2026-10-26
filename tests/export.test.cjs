@@ -20,8 +20,8 @@ function harness(writeResult) {
     await handler({type:'tool-call',tool,callId:'test-call',args}); return messages.at(-1);
   }};
 }
-const unchanged={source:'Barbare',translation:'野蛮人',optimized_translation:'野蛮人',changes:[]};
-const changed={source:'Enregistrez les modifications avant de quitter.',translation:'退出后保存更改。',optimized_translation:'退出前保存更改。',changes:['修正操作先后顺序，避免误导用户。']};
+const unchanged={entry_type:'name',source:'Barbare',translation:'野蛮人',optimized_translation:'野蛮人',changes:[]};
+const changed={entry_type:'text',source:'Enregistrez les modifications avant de quitter.',translation:'退出后保存更改。',optimized_translation:'退出前保存更改。',changes:['修正操作先后顺序，避免误导用户。']};
 test('exports original, existing translation, polished translation and specific reasons',async()=>{
  const h=harness(); const result=await h.run({expected_rows:2,rows:[unchanged,changed]});
  assert.equal(result.ok,true);assert.equal(result.result.changed,1);assert.equal(result.result.unchanged,1);
@@ -36,6 +36,7 @@ test('exports original, existing translation, polished translation and specific 
 for(const [label,row] of [
  ['missing optimized translation',{...changed,optimized_translation:undefined}],
  ['missing old translation',{...changed,translation:undefined}],
+ ['missing entry type',{...changed,entry_type:undefined}],
  ['missing source',{...changed,source:undefined}],
  ['missing changes',{...changed,changes:undefined}],
  ['changed without reasons',{...changed,changes:[]}],
@@ -50,14 +51,14 @@ for(const [label,row] of [
 test('rejects row count mismatch',async()=>{const h=harness();assert.equal((await h.run({expected_rows:2,rows:[unchanged]})).ok,false);assert.equal(h.writes.length,0);});
 test('preserves duplicate rows, IDs, whitespace, Unicode, multiline and formula-like text',async()=>{
  const texts=[' =1+1\n<&> " 😀 ','_x0041_\r\nline\t2','00123'];
- const rows=texts.map((s,i)=>({source:s,translation:s,optimized_translation:s,changes:[],id:String(i)}));
- rows.push({...rows[0]});rows.push({source:null,translation:'abc',optimized_translation:'ab',changes:['删除末尾误加字符；原文未提供，需人工确认。']});
+ const rows=texts.map((s,i)=>({entry_type:'text',source:s,translation:s,optimized_translation:s,changes:[],id:String(i)}));
+ rows.push({...rows[0]});rows.push({entry_type:'text',source:null,translation:'abc',optimized_translation:'ab',changes:['删除末尾误加字符；原文未提供，需人工确认。']});
  const h=harness();const r=await h.run({expected_rows:rows.length,rows});assert.equal(r.ok,true);
  fs.writeFileSync(path.join(outputDir,'edge-cases.xlsx'),Buffer.from(h.writes[0].content,'base64'));
  fs.writeFileSync(path.join(outputDir,'edge-cases.json'),JSON.stringify(rows));
 });
 test('joins concise reasons without duplicating before and after text',async()=>{
- const h=harness(); const r=await h.run({expected_rows:1,rows:[{source:'a',translation:'one two',optimized_translation:'1 2',changes:['统一使用阿拉伯数字。','保留两项之间的空格。']}]});assert.equal(r.ok,true);
+ const h=harness(); const r=await h.run({expected_rows:1,rows:[{entry_type:'text',source:'a',translation:'one two',optimized_translation:'1 2',changes:['统一使用阿拉伯数字。','保留两项之间的空格。']}]});assert.equal(r.ok,true);
 });
 test('does not report a file when host write fails',async()=>{const h=harness({ok:false,message:'test disk failure'});const r=await h.run({expected_rows:1,rows:[unchanged]});assert.equal(r.ok,false);assert.equal(r.errorCode,'EXPORT_FAILED');assert.equal(r.result,undefined);});
 test('does not report success when byte count differs',async()=>{const h=harness({ok:true,bytes:0});const r=await h.run({expected_rows:1,rows:[unchanged]});assert.equal(r.ok,false);});

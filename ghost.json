@@ -3,9 +3,9 @@
   "minCindyVersion": "0.1.91",
   "id": "localization-polish",
   "name": "本地化润色",
-  "description": "按每批文案的用途和语气制定专属润色提示，再由当前模型处理；保留四列验收表、简短修改原因和修改标黄。",
+  "description": "按内容定制润色，名称默认锁定拼写与大小写；四列人工验收、简短修改原因及修改标黄。",
   "whenToUse": "润色或审校游戏、应用、产品及 UI 的现有译文，消除翻译腔、核对原意、术语和格式；支持任意语言组合、地区变体，以及需要原文、译文、优化后译文、逐条修改原因的人工验收表和 Excel/CSV 交付场景。",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "kind": "chip",
   "entry": "main.js",
   "command": "本地化润色",
@@ -57,7 +57,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 1000,
-                  "description": "结合本组意图自由制定目标语风格、句式及改写边界；描述与规则可采取不同策略。"
+                  "description": "区分名称与描述；名称保留项目拼写、大小写，其他内容按本组意图制定表达策略。不能为统一风格自行改名。"
                 }
               },
               "required": [
@@ -75,7 +75,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 400,
-              "description": "已确认的术语、限制或用户要求；保留影响本批决策的条目。"
+              "description": "用户明确要求、术语及大小写规范；不能从同组多数写法推断名称规范。"
             }
           },
           "unknowns": {
@@ -99,7 +99,7 @@
     },
     {
       "name": "export_review_xlsx",
-      "description": "润色完成后生成四列验收 Excel。先读取 localization-polish 手册，保留每行原文、原译和完整优化结果；changes 仅传简短的改动说明，不传 before/after、不重复前后译文。未改自动写“无需修改”，已改的 C 列标黄，缺字段或原因时拒绝导出。本工具在当前会话工作目录新建唯一命名的 .xlsx，不覆盖输入文件、不联网、不执行命令。成功后回读实际文件并核对每行说明是否准确，再交付。",
+      "description": "生成四列验收 Excel，在当前会话工作目录新建 .xlsx，不覆盖输入、不联网、不执行命令。逐行区分名称 name 与文案 text；名称默认锁定完整拼写和大小写，修改时必须有项目确认目标 approved_name 及真实依据 name_basis，不能为“统一风格”自行填写。缺依据或与确认目标不符就拒绝导出。原因只简述改动；未改写“无需修改”，已改的 C 列标黄。成功后回读文件核对输入。",
       "parameters": {
         "type": "object",
         "additionalProperties": false,
@@ -158,9 +158,30 @@
                   "minLength": 1,
                   "maxLength": 32767,
                   "description": "可选待确认事项，不得代替已修改行的 changes。"
+                },
+                "entry_type": {
+                  "type": "string",
+                  "enum": [
+                    "name",
+                    "text"
+                  ],
+                  "description": "必填。道具、装备、角色、技能等名称为 name；描述、对白、规则、提示为 text。名称与描述混合时保留内嵌专名，不以 text 绕过名称保护。"
+                },
+                "approved_name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32767,
+                  "description": "仅从用户确认的译名、术语表，或明确大小写/改名规则得到的完整目标名称。不得仅因自然度或同系列多数写法自行生成。无此依据时省略并保留原译。"
+                },
+                "name_basis": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32767,
+                  "description": "与 approved_name 配对，说明该目标来自哪条用户要求或术语记录；不能将模型推测当成用户确认。"
                 }
               },
               "required": [
+                "entry_type",
                 "source",
                 "translation",
                 "optimized_translation",
